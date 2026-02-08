@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Name</title>
+    <script src=./resources/main.js></script>
+    <script>
+        // should run on start
+        updateCarousel();
+
+  setInterval(() => {
+    currentIndex = (currentIndex + 1) % images.length;
+    updateCarousel();
+  }, 5000);</script>
+<link rel=stylesheet href=./resources/main.css>
+<style>
+/* moved to external stylesheet */
+    
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>2244 Team Name</h1>
+    <p></p>
+</header>
+
+<nav>
+    <a href="#about">About</a>
+    <a href="#project">Project</a>
+    <a href="#robot">Robot</a>
+    <a href="#photos">Photos</a>
+    <a href="#sad-bart-simpson"></a>
+  <!--  <a href="#contact">Contact</a> -->
+</nav>
+
+<section id="about">
+    <h2>About Us</h2>
+    <div class="card">
+        <p>
+        We are FIRST LEGO League Team 2244!  
+        Our team loves robotics, coding, and creative problem solving.
+        We work together to design, build, and program LEGO robots to
+        complete missions and research real-world problems.
+        </p>
+    </div>
+</section>
+
+<section id="project">
+    <h2>Our Innovation Project</h2>
+    <p>ATMO: the drone-car thing that flies AND drives!!!!!!!!!!!!</p>
+    <div class="card">
+        <p>The drone-robot:</p>
+<img src=./other-photos/drone.png>
+        <br><br>
+        <iframe src="./resources/thing.pdf" width="100%" height="600px" style="border: none;">
+  This browser does not support PDFs. Please download the PDF to view it:
+  <a href="yourfile.pdf">Download PDF</a>
+</iframe>
+
+    </div>
+</section>
+
+<section id="robot">
+    <h2>Our Robot</h2>
+    <div class="card">
+        <p>
+        Our robot is built using LEGO SPIKE Prime and programmed in
+        blocks.  
+        It was based off the basic robot, and has the wheels moved to diffrent places for more accurate turning. 
+        </p><center comment="this will be removed later" >
+        <img src="./other-photos/robots.jpg" class=fix>
+            </center>
+    </div>
+</section>
+
+<section id="photos">
+    <h2>Team Photos</h2>
+    <div class="gallery">
+        <div class="carousel">
+  <div class="track">
+    <img src="./photos/theo.jpg" />
+    <img src="./photos/isaac-chopped.jpg" />
+    <img src="./photos/charlie.jpg" />
+    <img src="./photos/mike.jpg" />
+    <img src="./photos/fits.jpg" /></div><br><div class=track><!-- fix someday or dont i dont care -->
+    <img src="./photos/isabelle.jpg" />
+    <img src="./photos/otto.jpg" />
+    <img src="./photos/finn.jpg" />
+    <img src="./photos/kp.jpg" />
+  </div>
+</div>
+    </div>
+</section>
+<section id="sad-bart-simpson">
+    <h2>Sad Bart Simpson</h2>
+    <div class="card">
+        <p>During regionals, our  mascot was a picture of sad bart simpson.</p>
+        <img src=./other-photos/sad-bart-simpson/1.png
+    </div>
+</section>
+<footer>
+    <p>© 2026 Team Name, FLL Team 2244 | FIRST LEGO League</p><p>Programmed By Mike!</p>
+</footer>
+
+</body>
+</html>
