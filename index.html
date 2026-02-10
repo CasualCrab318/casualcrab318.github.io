@@ -5,14 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Team Name</title>
     <script src=./resources/main.js></script>
-    <script>
+    <script>/*
         // should run on start
         updateCarousel();
 
   setInterval(() => {
     currentIndex = (currentIndex + 1) % images.length;
     updateCarousel();
-  }, 5000);</script>
+  }, 5000);
+    */
+        // removed this logic because its not needed anymore 
+    </script>
 <link rel=stylesheet href=./resources/main.css>
 <style>
 /* moved to external stylesheet */
@@ -31,6 +34,7 @@
     <a href="#about">About</a>
     <a href="#project">Project</a>
     <a href="#robot">Robot</a>
+    <a href="#game">ATMO game<a>
     <a href="#photos">Photos</a>
     <a href="#sad-bart-simpson">Sad Bart Simpson</a>
   <!--  <a href="#contact">Contact</a> -->
@@ -80,6 +84,12 @@
         <br><br>
             </center>
     </div>
+</section>
+<section id=game>
+    <h2>The ATMO game</h2>
+    <p>This is a game themed around our innovation project!</p>
+    <button>Fullscreen</button>
+    <iframe src=./game/index.html></iframe>
 </section>
 
 <section id="photos">
