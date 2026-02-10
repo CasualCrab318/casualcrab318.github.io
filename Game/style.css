@@ -1,0 +1,69 @@
+:root{
+  --bg:#0f1720;
+  --panel:#0b1220;
+  --accent:#f39c12;
+  --muted:#94a3b8;
+  --size:360px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body,#app{height:100%}
+body{
+  background:linear-gradient(180deg,#071523 0%, #0b1220 100%);
+  font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color:#e6eef8;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:12px;
+  user-select:none;
+  touch-action:manipulation;
+}
+#app{
+  width:100%;
+  max-width:420px;
+  background:linear-gradient(180deg,#071a24 0%, rgba(255,255,255,0.02) 100%);
+  border-radius:14px;
+  padding:12px;
+  box-shadow:0 10px 30px rgba(2,6,23,0.6);
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  align-items:center;
+}
+#topbar{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+#drone{width:60px;height:28px;display:flex;align-items:center;justify-content:center}
+#fuel-wrap{flex:1;display:flex;align-items:center;gap:8px;padding:6px 8px;background:rgba(255,255,255,0.02);border-radius:8px}
+#fuel-bar{height:12px;width:100%;background:rgba(255,255,255,0.04);border-radius:8px;overflow:hidden;position:relative}
+#fuel-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),#ff6b6b);transition:width 300ms linear}
+#fuel-text{font-size:12px;color:var(--muted);min-width:72px;text-align:right}
+#restart{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);padding:6px 10px;border-radius:8px;font-size:16px}
+
+#board-wrap{
+  width:var(--size);
+  height:var(--size);
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  position:relative;
+  touch-action:none;
+}
+canvas{width:100%;height:100%;display:block;border-radius:8px;background:transparent}
+#overlay{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-weight:600;font-size:20px;color:#fff;background:linear-gradient(180deg,rgba(2,6,23,0.6),rgba(2,6,23,0.8));border-radius:10px;
+}
+
+#hud{width:100%;display:flex;justify-content:space-between;color:var(--muted);font-size:13px;padding:0 6px}
+@media (max-width:420px){
+  :root{--size:320px}
+  #app{padding:8px}
+}
