@@ -1,140 +1,48 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Team Name</title>
-    <script src=./resources/main.js></script>
-    <script>/*
-        // should run on start
-        updateCarousel();
-
-  setInterval(() => {
-    currentIndex = (currentIndex + 1) % images.length;
-    updateCarousel();
-  }, 5000);
-    */
-        // removed this logic because its not needed anymore 
-    </script>
-<link rel=stylesheet href=./resources/main.css>
-<style>
-/* moved to external stylesheet */
-    
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <link rel="stylesheet" href="style.css" />
+  <title>Drone Fuel Match-3</title>
 </head>
-
 <body>
-
-<header>
-    <img src="./photos/Team Logo.png" width="420px"/>
-    <p></p>
-</header>
-
-<nav>
-    <a href="#about">About</a>
-    <a href="#project">Project</a>
-    <a href="#robot">Robot</a>
-    <a href="#game">ATMO game<a>
-    <a href="#photos">Photos</a>
-    <a href="#sad-bart-simpson">Sad Bart Simpson</a>
-  <!--  <a href="#contact">Contact</a> -->
-</nav>
-
-<section id="about">
-    <h2>About Us</h2>
-    <div class="card">
-        <p>
-        We are FIRST LEGO League Team 2244, Team Name!  
-        Lego robotics can be hard, but with time and effort it can be worth it. That's why with our team of 9, we were able to do what a team of 3 or 4 can do in double the time.
-            We as a team are dedicated to hard work and celebrating our victories, and then going right back at it. We are a school team, so we get a lot less time, but are able to get stuff to work just as well.
-        </p>
+  <div id="app">
+    <div id="topbar">
+      <div id="drone">
+        <!-- simple SVG drone -->
+        <svg viewBox="0 0 64 32" width="56" height="28" aria-hidden>
+          <g fill="#333">
+            <rect x="16" y="10" width="32" height="12" rx="3" fill="#2c3e50"/>
+            <circle cx="12" cy="8" r="6" fill="#2c3e50"/>
+            <circle cx="52" cy="8" r="6" fill="#2c3e50"/>
+            <rect x="28" y="6" width="8" height="4" rx="2" fill="#ecf0f1"/>
+          </g>
+        </svg>
+      </div>
+      <div id="fuel-wrap" aria-hidden>
+        <div id="fuel-bar"><div id="fuel-fill"></div></div>
+        <div id="fuel-text">0 / 100</div>
+      </div>
+      <button id="restart" aria-label="Restart level">↻</button>
     </div>
-</section>
 
-<section id="project">
-    <h2>Our Innovation Project</h2>
-    <p>ATMO: the drone-car thing that flies AND drives!!!!!!!!!!!!</p>
-    <div class="card">
-         <p>Our main workers on the innovation project are: Isabelle, KP, and Theo</p>
-        <p>The drone-robot:</p>
-<img src=./other-photos/drone.png>
-        <p>This is the PDF outlining our project, and it is also the pamphlet we hand to the judges.</p>
-        <iframe src="./resources/thing.pdf" width="100%" height="600px" style="border: none;">
-  This browser does not support PDFs. Please download the PDF to view it:
-  <a href="yourfile.pdf">Download PDF</a>
-            </iframe>
-        <p>Our innovation project is using Caltech's ATMO drone to slowly lower into a proposed dig site and scan it to see if paleontologist can safely work in the area. 
-                If it is safe the drone will fly up and workers enter the site, if it notices that it's unsafe, they will get a warning and the workers will be safely extracted.</p>
-
+    <div id="board-wrap" role="application" aria-label="Match three board">
+      <canvas id="board" width="360" height="360"></canvas>
+      <div id="overlay" hidden></div>
     </div>
-</section>
 
-<section id="robot">
-    <h2>Our Robot</h2>
-    <div class="card">
-        <p>
-        Our robot is built using LEGO SPIKE Prime and programmed in
-        blocks.  
-        It was based off the basic robot, and has the wheels moved to diffrent places for more accurate turning. Our main coders are Isaac and Otto. They have been working very hard and have cooked up an amazing run to maximize our points, as fast as possible.
-        </p>
-        <img src="./other-photos/robots.jpg" class=fix>
-             <p>Our robot is set to preform 5 sets of moves, getting us upwards of about 170 points. It may not be much at state, but since we don't get much time, as we are a school, we work with what we have.
-        Here is our robot run map:</p>
-        <img src="./photos/Robotics Scoring Chart.jpg"  width="720px"/>
-        <br><br>
-            </center>
+    <div id="hud">
+      <div id="level">Level 1</div>
+      <div id="goal">Fuel goal: 100</div>
     </div>
-</section>
-<section id=game>
-    <h2>The ATMO game</h2>
-    <p>This is a game themed around our innovation project!</p>
-    <button>Fullscreen</button>
-    <iframe src=./game/index.html></iframe>
-</section>
-
-<section id="photos">
-    <h2>Team Photos</h2>
-    <h3>Creator of the Website<h3/>
-    <div class="gallery">
-        <div class="carousel">
-            <img src="./photos/mike.jpg" />
-    </div>
-        </div>
-    <h3>Keepers of the Robots</h3>
-         <div class="gallery">
-           <div class="carousel">
-             <img src="./photos/isaac-chopped.jpg"/>
-             <img src="./photos/otto.jpg"/>
-               </div>
-             </div>
-    <h3>Workers of the Innovation Project</h3>
-        <div class="gallery">
-            <div class="carousel">
-     <img src="./photos/isabelle.jpg"/>
-    <img src="./photos/kp.jpg"/>
-    <img src="./photos/theo-chopped.jpg"/>
-            </div>
-            </div>
-        <h3>Wild Cards (Worked on a lot of things)</h3>
-            <div class="gallery">
-                <div class="carousel">
-    <img src="./photos/charlie.jpg"/>
-    <img src="./photos/fits.jpg"/>
-    <img src="./photos/finn.jpg"/>
   </div>
-</div>
-</section>
-<section id="sad-bart-simpson">
-    <h2>Sad Bart Simpson</h2>
-    <div class="card">
-        <p>During regionals, our  mascot was a picture of sad bart simpson. He was one of the reasons we made it to State.</p>
-        <img src=./other-photos/sad-bart-simpson/1.png
-    </div>
-</section>
-<footer>
-       <a href="index.html">Back to Top</a>
-        <p>© 2026 Team Name, FLL Team 2244 | FIRST LEGO League</p><p>Programmed By Mike!</p>
-</footer>
 
+  <script type="importmap">
+  {
+    "imports": {}
+  }
+  </script>
+  <script type="module" src="main.js"></script>
 </body>
 </html>
