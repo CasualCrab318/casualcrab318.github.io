@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATMO Drone Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 100%);
+        }
+
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            background: linear-gradient(to bottom, #FFD89B 0%, #FFE5B4 50%, #D2B48C 50%, #C19A6B 100%);
+            border: 3px solid #333;
+        }
+
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            font-size: 14px;
+            max-width: 250px;
+        }
+
+        #controls h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        #controls p {
+            margin: 5px 0;
+            color: #555;
+        }
+
+        #modeIndicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .drone-mode {
+            color: #2196F3;
+        }
+
+        .car-mode {
+            color: #FF5722;
+        }
+
+        #speedometer {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            font-size: 14px;
+            min-width: 150px;
+        }
+
+        .key {
+            display: inline-block;
+            background: #333;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="1000" height="600"></canvas>
+    
+    <div id="controls">
+        <h3>🎮 Controls</h3>
+        <p><span class="key">↑ ↓ ← →</span> Move</p>
+        <p><span class="key">SPACE</span> Switch Mode</p>
+        <p><span class="key">W/S</span> Throttle (Drone)</p>
+        <p style="margin-top: 10px; font-size: 12px; color: #777;">
+            Navigate ancient ruins! Switch to drone mode to fly over obstacles.
+        </p>
+    </div>
+
+    <div id="modeIndicator">
+        <div id="modeText" class="drone-mode">🚁 DRONE MODE</div>
+    </div>
+
+    <div id="speedometer">
+        <div><strong>Distance:</strong> <span id="score">0</span>m</div>
+        <div><strong>Speed:</strong> <span id="speed">0</span></div>
+        <div><strong>Altitude:</strong> <span id="altitude">0</span>m</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game state
+        const game = {
+            mode: 'drone',
+            score: 0,
+            distance: 0,
+            cameraX: 0
+        };
+
+        // ATMO Drone/Car object
+        const atmo = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            width: 50,
+            height: 30,
+            velocityX: 0,
+            velocityY: 0,
+            angle: 0,
+            thrust: 0,
+            maxSpeed: 8,
+            acceleration: 0.3,
+            friction: 0.95,
+            gravity: 0.2,
+            descending: false
+        };
+
+        // Input handling
+        const keys = {};
+        
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            
+            if (e.key === ' ' && !keys.spaceLocked) {
+                keys.spaceLocked = true;
+                toggleMode();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+            if (e.key === ' ') {
+                keys.spaceLocked = false;
+            }
+        });
+
+        function toggleMode() {
+            if (game.mode === 'drone') {
+                game.mode = 'car';
+                document.getElementById('modeText').textContent = '🚗 RC CAR MODE';
+                document.getElementById('modeText').className = 'car-mode';
+                // Set a flag to animate descent
+                atmo.descending = true;
+            } else {
+                game.mode = 'drone';
+                document.getElementById('modeText').textContent = '🚁 DRONE MODE';
+                document.getElementById('modeText').className = 'drone-mode';
+                atmo.descending = false;
+            }
+        }
+
+        // Static terrain obstacles
+        const terrain = [
+            { x: 200, type: 'ruins', width: 80, height: 120 },
+            { x: 400, type: 'temple', width: 80, height: 150 },
+            { x: 650, type: 'ruins', width: 80, height: 100 },
+            { x: 900, type: 'cave', width: 150, height: 80 },
+            { x: 1200, type: 'temple', width: 80, height: 140 },
+            { x: 1450, type: 'ruins', width: 80, height: 110 },
+            { x: 1700, type: 'cave', width: 180, height: 90 },
+            { x: 2000, type: 'temple', width: 80, height: 160 },
+            { x: 2300, type: 'ruins', width: 80, height: 130 },
+            { x: 2600, type: 'cave', width: 200, height: 85 }
+        ];
+
+        function update() {
+            if (game.mode === 'drone') {
+                updateDroneMode();
+            } else {
+                updateCarMode();
+            }
+
+            // Update camera position based on player movement
+            game.cameraX = atmo.x - canvas.width / 2;
+            
+            // Keep camera in bounds
+            if (game.cameraX < 0) game.cameraX = 0;
+
+            // Track distance traveled
+            game.distance = atmo.x / 10;
+
+            // Check collision with terrain
+            const groundLevel = canvas.height - 150;
+            
+            terrain.forEach(obstacle => {
+                const obstacleLeft = obstacle.x;
+                const obstacleRight = obstacle.x + obstacle.width;
+                const obstacleTop = groundLevel - obstacle.height;
+                
+                if (obstacle.type === 'cave') {
+                    // Cave - must be in car mode and on ground to pass through
+                    if (atmo.x + 25 > obstacleLeft && atmo.x - 25 < obstacleRight) {
+                        // Check if trying to fly over cave (blocked in drone mode)
+                        if (game.mode === 'drone' && atmo.y < groundLevel - 20) {
+                            // Hit the cave ceiling
+                            if (atmo.y < obstacleTop + 10) {
+                                atmo.y = obstacleTop + 10;
+                                atmo.velocityY = Math.max(0, atmo.velocityY);
+                            }
+                        }
+                        // In car mode on ground - can pass through
+                    }
+                } else {
+                    // Ruins/Temple - must fly over in drone mode
+                    if (game.mode === 'car') {
+                        if (atmo.x + 25 > obstacleLeft && 
+                            atmo.x - 25 < obstacleRight && 
+                            atmo.y + 15 > obstacleTop) {
+                            // Hit obstacle - push back
+                            if (atmo.x < obstacleLeft + obstacle.width / 2) {
+                                atmo.x = obstacleLeft - 30;
+                            } else {
+                                atmo.x = obstacleRight + 30;
+                            }
+                            atmo.velocityX = 0;
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('score').textContent = Math.floor(game.distance);
+            const speed = Math.sqrt(atmo.velocityX ** 2 + atmo.velocityY ** 2).toFixed(1);
+            document.getElementById('speed').textContent = speed;
+            const altitude = Math.max(0, (canvas.height - 150 - atmo.y)).toFixed(0);
+            document.getElementById('altitude').textContent = altitude;
+        }
+
+        function updateDroneMode() {
+            let targetVelocityX = 0;
+
+            if (keys['ArrowLeft']) targetVelocityX = -atmo.maxSpeed;
+            if (keys['ArrowRight']) targetVelocityX = atmo.maxSpeed;
+            
+            if (keys['ArrowUp'] || keys['w'] || keys['W']) {
+                atmo.thrust = -atmo.acceleration * 2;
+            } else if (keys['ArrowDown'] || keys['s'] || keys['S']) {
+                atmo.thrust = atmo.acceleration;
+            } else {
+                atmo.thrust = 0;
+            }
+
+            atmo.velocityY += atmo.thrust + atmo.gravity;
+            
+            if (targetVelocityX !== 0) {
+                atmo.velocityX += (targetVelocityX - atmo.velocityX) * 0.1;
+            } else {
+                atmo.velocityX *= atmo.friction;
+            }
+
+            atmo.velocityY *= 0.98;
+
+            atmo.x += atmo.velocityX;
+            atmo.y += atmo.velocityY;
+
+            // Wider world boundaries
+            if (atmo.x < 25) atmo.x = 25;
+            if (atmo.x > 3000) atmo.x = 3000;
+            if (atmo.y < 0) atmo.y = 0;
+            if (atmo.y > canvas.height - 150) {
+                atmo.y = canvas.height - 150;
+                atmo.velocityY = 0;
+            }
+
+            atmo.angle = atmo.velocityX * 0.02;
+        }
+
+        function updateCarMode() {
+            const groundLevel = canvas.height - 150;
+            
+            // Smooth descent to ground when switching from drone mode
+            if (atmo.descending && atmo.y < groundLevel) {
+                atmo.velocityY = 5; // Controlled descent speed
+                atmo.y += atmo.velocityY;
+                
+                // Once we reach the ground, stop descending
+                if (atmo.y >= groundLevel) {
+                    atmo.y = groundLevel;
+                    atmo.velocityY = 0;
+                    atmo.descending = false;
+                }
+                
+                // Allow horizontal movement during descent
+                let targetVelocityX = 0;
+                if (keys['ArrowLeft']) targetVelocityX = -atmo.maxSpeed * 0.6;
+                if (keys['ArrowRight']) targetVelocityX = atmo.maxSpeed * 0.6;
+                
+                if (targetVelocityX !== 0) {
+                    atmo.velocityX += (targetVelocityX - atmo.velocityX) * 0.1;
+                } else {
+                    atmo.velocityX *= 0.95;
+                }
+                
+                atmo.x += atmo.velocityX;
+            } else {
+                // Normal car mode on ground
+                atmo.y = groundLevel;
+                
+                let targetVelocityX = 0;
+
+                if (keys['ArrowLeft']) targetVelocityX = -atmo.maxSpeed * 1.2;
+                if (keys['ArrowRight']) targetVelocityX = atmo.maxSpeed * 1.2;
+
+                if (targetVelocityX !== 0) {
+                    atmo.velocityX += (targetVelocityX - atmo.velocityX) * 0.15;
+                } else {
+                    atmo.velocityX *= 0.9;
+                }
+
+                atmo.velocityY = 0;
+                atmo.x += atmo.velocityX;
+            }
+
+            // Wider world boundaries
+            if (atmo.x < 25) atmo.x = 25;
+            if (atmo.x > 3000) atmo.x = 3000;
+
+            atmo.angle = atmo.velocityX * 0.01;
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Save the context and apply camera transform
+            ctx.save();
+            ctx.translate(-game.cameraX, 0);
+            
+            drawBackground();
+
+            // Draw terrain obstacles
+            terrain.forEach(obstacle => {
+                drawObstacle(obstacle);
+            });
+
+            drawATMO();
+            
+            ctx.restore();
+        }
+
+        function drawBackground() {
+            // Desert sky - extends with camera
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height / 2);
+            gradient.addColorStop(0, '#FFD89B');
+            gradient.addColorStop(1, '#FFE5B4');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(game.cameraX, 0, canvas.width, canvas.height / 2);
+
+            // Desert sand
+            ctx.fillStyle = '#D2B48C';
+            ctx.fillRect(game.cameraX, canvas.height / 2, canvas.width, canvas.height / 2);
+
+            // Sand dunes in background
+            ctx.fillStyle = '#C9A876';
+            ctx.beginPath();
+            ctx.moveTo(game.cameraX, canvas.height / 2 + 50);
+            for (let i = Math.floor(game.cameraX / 100) * 100; i <= game.cameraX + canvas.width; i += 100) {
+                ctx.quadraticCurveTo(i + 25, canvas.height / 2 + 30, i + 50, canvas.height / 2 + 50);
+                ctx.quadraticCurveTo(i + 75, canvas.height / 2 + 70, i + 100, canvas.height / 2 + 50);
+            }
+            ctx.lineTo(game.cameraX + canvas.width, canvas.height);
+            ctx.lineTo(game.cameraX, canvas.height);
+            ctx.closePath();
+            ctx.fill();
+
+            // Ancient pyramids in far background (scattered throughout the world)
+            drawPyramid(200, canvas.height / 2 - 30, 80, '#B8956A');
+            drawPyramid(800, canvas.height / 2 - 20, 60, '#B8956A');
+            drawPyramid(1500, canvas.height / 2 - 35, 70, '#B8956A');
+            drawPyramid(2200, canvas.height / 2 - 25, 65, '#B8956A');
+
+            // Sun - moves with camera
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(100 + game.cameraX, 100, 40, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Sun rays
+            ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 12; i++) {
+                const angle = (Math.PI * 2 / 12) * i;
+                ctx.beginPath();
+                ctx.moveTo(100 + game.cameraX + Math.cos(angle) * 45, 100 + Math.sin(angle) * 45);
+                ctx.lineTo(100 + game.cameraX + Math.cos(angle) * 60, 100 + Math.sin(angle) * 60);
+                ctx.stroke();
+            }
+
+            // Sand texture
+            ctx.fillStyle = '#C19A6B';
+            for (let i = Math.floor(game.cameraX / 60) * 60; i <= game.cameraX + canvas.width; i += 60) {
+                ctx.fillRect(i, canvas.height / 2 + 20, 30, canvas.height);
+            }
+        }
+        
+        function drawPyramid(x, y, size, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x - size / 2, y + size);
+            ctx.lineTo(x + size / 2, y + size);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Shading
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + size / 2, y + size);
+            ctx.lineTo(x, y + size);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function drawObstacle(obstacle) {
+            const groundLevel = canvas.height - 150;
+            const x = obstacle.x;
+            const y = groundLevel - obstacle.height;
+            
+            if (obstacle.type === 'cave') {
+                // Cave entrance - dark opening with rocky exterior
+                ctx.fillStyle = '#6B5344';
+                // Cave rock formation
+                ctx.beginPath();
+                ctx.moveTo(x, groundLevel);
+                ctx.lineTo(x + 20, y);
+                ctx.lineTo(x + obstacle.width - 20, y);
+                ctx.lineTo(x + obstacle.width, groundLevel);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Dark cave entrance
+                ctx.fillStyle = '#1A1A1A';
+                ctx.beginPath();
+                ctx.ellipse(x + obstacle.width / 2, groundLevel - obstacle.height / 2, obstacle.width * 0.35, obstacle.height * 0.35, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Rock texture
+                ctx.fillStyle = '#5A4535';
+                for (let i = 0; i < 5; i++) {
+                    const rockX = x + 10 + Math.random() * (obstacle.width - 20);
+                    const rockY = y + 10 + Math.random() * 20;
+                    ctx.beginPath();
+                    ctx.arc(rockX, rockY, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // Cave shadow
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.beginPath();
+                ctx.ellipse(x + obstacle.width / 2, groundLevel - 5, obstacle.width * 0.4, 10, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+            } else if (obstacle.type === 'ruins') {
+                // Ancient stone columns
+                ctx.fillStyle = '#8B7355';
+                ctx.fillRect(x, y, 30, obstacle.height);
+                ctx.fillRect(x + 50, y, 30, obstacle.height);
+                
+                // Stone texture
+                ctx.fillStyle = '#7A6348';
+                for (let i = 0; i < obstacle.height; i += 20) {
+                    ctx.fillRect(x + 5, y + i, 20, 8);
+                    ctx.fillRect(x + 55, y + i, 20, 8);
+                }
+                
+                // Broken top
+                ctx.fillStyle = '#6B5344';
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + 10, y - 10);
+                ctx.lineTo(x + 20, y);
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.moveTo(x + 50, y);
+                ctx.lineTo(x + 65, y - 15);
+                ctx.lineTo(x + 80, y);
+                ctx.fill();
+                
+                // Ancient carvings
+                ctx.strokeStyle = '#5A4535';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x + 10, y + 20);
+                ctx.lineTo(x + 20, y + 20);
+                ctx.moveTo(x + 10, y + 40);
+                ctx.lineTo(x + 20, y + 40);
+                ctx.stroke();
+                
+            } else {
+                // Temple structure
+                ctx.fillStyle = '#A0826D';
+                ctx.fillRect(x + 10, y, 60, obstacle.height);
+                
+                // Temple entrance
+                ctx.fillStyle = '#3E2723';
+                ctx.beginPath();
+                ctx.arc(x + 40, y + obstacle.height - 30, 15, 0, Math.PI, true);
+                ctx.fill();
+                
+                // Temple top
+                ctx.fillStyle = '#8B6F47';
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + 40, y - 20);
+                ctx.lineTo(x + 80, y);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Hieroglyphs
+                ctx.fillStyle = '#5D4E37';
+                ctx.font = 'bold 12px Arial';
+                ctx.fillText('☥', x + 25, y + 30);
+                ctx.fillText('𓂀', x + 50, y + 30);
+            }
+        }
+
+        function drawATMO() {
+            ctx.save();
+            ctx.translate(atmo.x, atmo.y);
+            ctx.rotate(atmo.angle);
+
+            if (game.mode === 'drone') {
+                drawDrone();
+            } else {
+                drawCar();
+            }
+
+            ctx.restore();
+        }
+
+        function drawDrone() {
+            ctx.fillStyle = '#2196F3';
+            ctx.fillRect(-25, -10, 50, 20);
+            
+            ctx.fillStyle = '#1976D2';
+            ctx.beginPath();
+            ctx.arc(0, 0, 12, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(-20, 0);
+            ctx.lineTo(-35, -15);
+            ctx.moveTo(20, 0);
+            ctx.lineTo(35, -15);
+            ctx.moveTo(-20, 0);
+            ctx.lineTo(-35, 15);
+            ctx.moveTo(20, 0);
+            ctx.lineTo(35, 15);
+            ctx.stroke();
+
+            ctx.fillStyle = '#FFD700';
+            const propellers = [
+                [-35, -15], [35, -15], [-35, 15], [35, 15]
+            ];
+            
+            propellers.forEach(([x, y]) => {
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(Date.now() / 50);
+                ctx.fillRect(-8, -2, 16, 4);
+                ctx.fillRect(-2, -8, 4, 16);
+                ctx.restore();
+            });
+
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(-15, 10);
+            ctx.lineTo(-15, 18);
+            ctx.moveTo(15, 10);
+            ctx.lineTo(15, 18);
+            ctx.stroke();
+        }
+
+        function drawCar() {
+            // Main body (same as drone)
+            ctx.fillStyle = '#2196F3';
+            ctx.fillRect(-25, -10, 50, 20);
+            
+            // Cockpit (same as drone)
+            ctx.fillStyle = '#1976D2';
+            ctx.beginPath();
+            ctx.arc(0, 0, 12, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Propeller arms folded down as wheel axles
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            // Front left wheel arm
+            ctx.moveTo(-20, 0);
+            ctx.lineTo(-30, 15);
+            // Front right wheel arm
+            ctx.moveTo(20, 0);
+            ctx.lineTo(30, 15);
+            // Back left wheel arm
+            ctx.moveTo(-20, 0);
+            ctx.lineTo(-30, 15);
+            // Back right wheel arm
+            ctx.moveTo(20, 0);
+            ctx.lineTo(30, 15);
+            ctx.stroke();
+
+            // Propellers as wheels (spinning)
+            ctx.fillStyle = '#FFD700';
+            const wheels = [
+                [-30, 15], [30, 15]
+            ];
+            
+            wheels.forEach(([x, y]) => {
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(Date.now() / 30); // Faster spin for wheel effect
+                // Draw propeller blades as wheel spokes
+                ctx.fillRect(-10, -2, 20, 4);
+                ctx.fillRect(-2, -10, 4, 20);
+                // Add hub
+                ctx.fillStyle = '#333';
+                ctx.beginPath();
+                ctx.arc(0, 0, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // ATMO logo
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('ATMO', 0, 0);
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
