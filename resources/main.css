@@ -158,4 +158,19 @@ footer {
     width: 500px; 
     height: 500px; 
 }
-/* fix this */
+
+.button-link {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #007BFF;
+  color: white;
+  text-decoration: none; /* Removes the underline */
+  border-radius: 5px;
+  font-family: sans-serif;
+  text-align: center;
+}
+
+.button-link:hover {
+  background-color: #0056b3; /* Darkens the button on hover */
+}
+
