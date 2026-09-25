@@ -1,2 +1,2 @@
 # casualcrab318.github.io
-This explains a lot. Source: Trust me, bro.
+# **9/25/26** Working on a new website, more news to follow
