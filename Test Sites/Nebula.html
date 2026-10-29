@@ -1,45 +1,92 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <title>full screen iframe</title>
-    <style type="text/css">
-        html {
-            overflow: auto;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Block with Copy Button</title>
+    <style>
+        .code-container {
+            position: relative;
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #0d1117; /* Dark background */
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 16px;
+            font-family: 'Courier New', Courier, monospace;
         }
-        
-        html,
-        body,
-        div,
-        iframe {
-            margin: 0px;
-            padding: 0px;
-            height: 100%;
-            border: none;
+        pre {
+            margin: 0;
+            overflow-x: auto;
         }
-        
-        iframe {
-            display: block;
-            width: 100%;
-            border: none;
-            overflow-y: auto;
-            overflow-x: hidden;
+        code {
+            color: #c9d1d9; /* Light text */
+            white-space: pre;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: sans-serif;
+            transition: background 0.2s;
+        }
+        .copy-btn:hover {
+            background-color: #30363d;
+            border-color: #8b949e;
+        }
+        .copy-btn.copied {
+            background-color: #238636;
+            color: white;
+            border-color: #2ea44f;
         }
     </style>
 </head>
-
 <body>
-    <iframe src="https://https://web.stremio.com/"
-            frameborder="0" 
-            marginheight="0" 
-            marginwidth="0" 
-            width="100%" 
-            height="100%" 
-            scrolling="auto"
-            allow="autoplay"
-            allowfullscreen>
-  </iframe>
+
+<div class="code-container">
+    <!-- The Copy Button -->
+    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+    
+    <!-- The Code Box -->
+    <pre><code id="codeBlock">npm install express
+const express = require('express')
+const app = express()
+const port = 3000
+
+app.get('/', (req, res) => {
+  res.send('Hello World!')
+})</code></pre>
+</div>
+
+<script>
+function copyCode(button) {
+    // Get the text inside the code element
+    const codeText = document.getElementById("codeBlock").innerText;
+
+    // Copy to clipboard
+    navigator.clipboard.writeText(codeText).then(() => {
+        // Change button appearance to "Copied!"
+        button.innerText = "Copied!";
+        button.classList.add("copied");
+
+        // Reset button back to "Copy" after 2 seconds
+        setTimeout(() => {
+            button.innerText = "Copy";
+            button.classList.remove("copied");
+        }, 2000);
+    }).catch(err => {
+        console.error("Failed to copy text: ", err);
+    });
+}
+</script>
 
 </body>
-
 </html>
+
