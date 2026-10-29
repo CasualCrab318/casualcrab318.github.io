@@ -3,25 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Code Block with Copy Button</title>
+    <title>Dynamic Code Block with Input</title>
     <style>
-        .code-container {
-            position: relative;
+        .wrapper {
             max-width: 600px;
             margin: 20px auto;
-            background-color: #0d1117; /* Dark background */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #24292f;
+        }
+        .text-input {
+            width: 100%;
+            padding: 8px 12px;
+            font-size: 14px;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        .text-input:focus {
+            outline: none;
+            border-color: #0969da;
+            box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
+        }
+        .code-container {
+            position: relative;
+            background-color: #0d1117;
             border: 1px solid #30363d;
             border-radius: 6px;
             padding: 16px;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
         }
         pre {
             margin: 0;
             overflow-x: auto;
         }
         code {
-            color: #c9d1d9; /* Light text */
+            color: #c9d1d9;
             white-space: pre;
+        }
+        /* Highlight the dynamic user input within the code */
+        .dynamic-placeholder {
+            color: #ff7b72; 
+            font-weight: bold;
         }
         .copy-btn {
             position: absolute;
@@ -34,7 +64,6 @@
             padding: 5px 10px;
             font-size: 12px;
             cursor: pointer;
-            font-family: sans-serif;
             transition: background 0.2s;
         }
         .copy-btn:hover {
@@ -50,33 +79,47 @@
 </head>
 <body>
 
-<div class="code-container">
-    <!-- The Copy Button -->
-    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-    
-    <!-- The Code Box -->
-    <pre><code id="codeBlock">npm install express
-const express = require('express')
+<div class="wrapper">
+    <!-- Input Field -->
+    <div class="input-group">
+        <label for="userNameInput">Enter your name:</label>
+        <input type="text" id="userNameInput" class="text-input" placeholder="World" oninput="updateCode()">
+    </div>
+
+    <!-- Code Block Container -->
+    <div class="code-container">
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        <pre><code id="codeBlock">const express = require('express')
 const app = express()
-const port = 3000
 
 app.get('/', (req, res) => {
-  res.send('Hello World!')
+  res.send('Hello <span id="codeOutput" class="dynamic-placeholder">World</span>!')
 })</code></pre>
+    </div>
 </div>
 
 <script>
+function updateCode() {
+    // Get the value from the user input field
+    const inputValue = document.getElementById("userNameInput").value;
+    const outputSpan = document.getElementById("codeOutput");
+
+    // Update the text within the code block. Fallback to "World" if empty.
+    if (inputValue.trim() === "") {
+        outputSpan.innerText = "World";
+    } else {
+        outputSpan.innerText = inputValue;
+    }
+}
+
 function copyCode(button) {
-    // Get the text inside the code element
+    // innerText reads the clean textual layout of the code container (ignoring the span tags)
     const codeText = document.getElementById("codeBlock").innerText;
 
-    // Copy to clipboard
     navigator.clipboard.writeText(codeText).then(() => {
-        // Change button appearance to "Copied!"
         button.innerText = "Copied!";
         button.classList.add("copied");
 
-        // Reset button back to "Copy" after 2 seconds
         setTimeout(() => {
             button.innerText = "Copy";
             button.classList.remove("copied");
